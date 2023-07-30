@@ -5,7 +5,8 @@ export class NovaEngine {
     static world = World.current
 
     static start() {
-        setImmediate(NovaEngine.update)
+        setImmediate(NovaEngine.update) // Note: setImmediate triggers thousands of calls to update() per second. 
+                                        // This is okay for prototyping, but will have to be refactored with something more accurate than setInterval.
     }
 
     private static accumulatedTime = 0
@@ -25,6 +26,6 @@ export class NovaEngine {
         }
         NovaEngine.world.updateSystems(dt / 1000)
 
-        setImmediate(NovaEngine.update)
+        setImmediate(NovaEngine.update) 
     }
 }
