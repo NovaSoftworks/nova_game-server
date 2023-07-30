@@ -17,6 +17,7 @@
     "test": "jest --coverage"
   },
   "dependencies": {
+    "@types/ws": "^8.5.5",
     "ws": "^8.13.0"
   },
   "devDependencies": {
