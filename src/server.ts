@@ -1,3 +1,5 @@
+import { NovaEngine } from "./engine/nova-engine"
+
 console.log(`Welcome to`)
 console.log(` _   _  ______      __     
 | \\ | |/ __ \\ \\    / /      
@@ -9,3 +11,4 @@ console.log(` _   _  ______      __
 
 console.log('Using Node.js version 20 (Bullseye)')
 
+NovaEngine.start()
