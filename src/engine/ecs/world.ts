@@ -7,7 +7,7 @@ export class World {
 
     private nextEntityId: number = 0
 
-    static current = new World()
+    static current: World = new World()
 
     // ENTITIES
     createEntity(): Entity {
