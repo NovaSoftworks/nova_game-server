@@ -1,4 +1,4 @@
-# nova_dedicated-game-server
+# nova_game-server
 
 ## Prerequisites
 This projects requires the Dev Containers extensions for Vistual Studio Code. For more information, check the [official documentation](https://code.visualstudio.com/docs/devcontainers/containers). 

@@ -9,7 +9,7 @@ console.log(` _   _  ______      __
 |  \\| | |  | \\ \\  / /  \\   
 | . \` | |  | |\\ \\/ / _\\ \\  
 | |\\  | |__| | \\  / ____ \\     
-|_| \\_|\\____/   \\/ /    \\_\\  - Dedicated Game Server               
+|_| \\_|\\____/   \\/ /    \\_\\  - Game Server               
 `)
 
 console.log('Using Node.js version 20 (Bullseye)')
@@ -29,12 +29,13 @@ wss.on('connection', (ws) => {
 
             if (data.type == 'connect') {
                 if (usernameTaken(username)) {
+                    console.log(`${new Date().toISOString()};INFO;connect;failure;${username};Already connected.`)
                     ws.send(JSON.stringify({
                         type: 'error',
                         message: `${username} is already connected.`
                     }))
                 } else {
-                    console.log(`PLAYER CONNECTED: ${username}`)
+                    console.log(`${new Date().toISOString()};INFO;connect;success;${username}`)
                     connectedUsernames.push(username)
 
                     const connectedPlayer = NovaEngine.world.createEntity()
@@ -46,7 +47,7 @@ wss.on('connection', (ws) => {
                 }
             }
         } catch (e: any) {
-            console.log(`SERVER ERROR: ${e.message}`)
+            console.log(`${new Date().toISOString()};ERROR;;;Could not interpret request.`)
             ws.send(JSON.stringify({
                 type: 'error',
                 message: `Could not interpret request.`,
@@ -62,7 +63,7 @@ wss.on('connection', (ws) => {
             const playerConnection = NovaEngine.world.getComponent<PlayerConnection>(entity, 'PlayerConnection')!
 
             if (playerConnection.ws === ws) {
-                console.log(`PLAYER DISCONNECTED: ${playerConnection.username}`)
+                console.log(`${new Date().toISOString()};INFO;disconnect;success;${playerConnection.username}`)
                 const index = connectedUsernames.indexOf(playerConnection.username)
                 if (index > -1) {
                     connectedUsernames.splice(index, 1)
