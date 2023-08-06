@@ -1,4 +1,4 @@
-import { Time } from '../'
+import { TimeUtils } from '../'
 
 // Mock the getCurrentTime method using perf_hooks
 const getCurrentTimeMock = jest.spyOn(performance, 'now')
@@ -7,7 +7,7 @@ describe('Time', () => {
     // Reset the mock before each test
     beforeEach(() => {
         getCurrentTimeMock.mockReset()
-        Time.previousFrameTime = 0
+        TimeUtils.previousFrameTime = 0
     })
 
     // Test the getCurrentTime method
@@ -17,11 +17,11 @@ describe('Time', () => {
             .mockReturnValueOnce(1000)
             .mockReturnValueOnce(1500)
 
-        expect(Time.getCurrentTime()).toBe(0)
+        expect(TimeUtils.getCurrentTime()).toBe(0)
 
-        expect(Time.getCurrentTime()).toBe(1000)
+        expect(TimeUtils.getCurrentTime()).toBe(1000)
 
-        expect(Time.getCurrentTime()).toBe(1500)
+        expect(TimeUtils.getCurrentTime()).toBe(1500)
     })
 
     // Test the calculateDeltaTime method
@@ -31,13 +31,13 @@ describe('Time', () => {
             .mockReturnValueOnce(1000)
             .mockReturnValueOnce(1500)
 
-        Time.calculateDeltaTime()
-        expect(Time.deltaTime).toBe(0)
+        TimeUtils.calculateDeltaTime()
+        expect(TimeUtils.deltaTime).toBe(0)
 
-        Time.calculateDeltaTime()
-        expect(Time.deltaTime).toBe(1000)
+        TimeUtils.calculateDeltaTime()
+        expect(TimeUtils.deltaTime).toBe(1000)
 
-        Time.calculateDeltaTime()
-        expect(Time.deltaTime).toBe(500)
+        TimeUtils.calculateDeltaTime()
+        expect(TimeUtils.deltaTime).toBe(500)
     })
 })

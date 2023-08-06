@@ -1,54 +1,65 @@
-import { Collider, PlayerConnection, Transform } from "./components"
-import { Rectangle, Vector2 } from "./engine/math"
+import { greet as cliGreet } from "./cli"
+import { PlayerConnection } from "./components"
 import { NovaEngine } from "./engine/nova-engine"
 import { WebSocket } from 'ws'
+import { createMap } from "./map"
 
-console.log(`Welcome to`)
-console.log(` _   _  ______      __     
-| \\ | |/ __ \\ \\    / /      
-|  \\| | |  | \\ \\  / /  \\   
-| . \` | |  | |\\ \\/ / _\\ \\  
-| |\\  | |__| | \\  / ____ \\     
-|_| \\_|\\____/   \\/ /    \\_\\  - Game Server               
-`)
-
-console.log('Using Node.js version 20 (Bullseye)')
-
+cliGreet()
 NovaEngine.start()
+createMap()
 
-const wss = new WebSocket.Server({ port: 80 })
+const port = 80
+
+const wss = new WebSocket.Server({ port: port }, () => {
+})
+
+wss.on('listening', () => {
+    console.log(`${new Date().toISOString()};INFO;;;;Listening on port ${port}.`)
+})
 
 const connectedUsernames: string[] = []
 const usernameTaken = (username: string) => { return connectedUsernames.includes(username) }
 
-wss.on('connection', (ws) => {
-    ws.on('message', (message) => {
+wss.on('connection', (connection) => {
+    connection.on('message', (message) => {
         try {
             const data = JSON.parse(message.toString())
-            const username = data.username
 
             if (data.type == 'connect') {
+                const username = data.username
+                if (username === undefined) {
+                    console.log(`${new Date().toISOString()};INFO;connect;failure;;Username field missing.`)
+                    connection.send(JSON.stringify({
+                        type: 'error',
+                        message: `Cannot connect without a username.`
+                    }))
+                    return
+                }
+
                 if (usernameTaken(username)) {
                     console.log(`${new Date().toISOString()};INFO;connect;failure;${username};Already connected.`)
-                    ws.send(JSON.stringify({
+                    connection.send(JSON.stringify({
                         type: 'error',
                         message: `${username} is already connected.`
                     }))
                 } else {
-                    console.log(`${new Date().toISOString()};INFO;connect;success;${username}`)
+                    console.log(`${new Date().toISOString()};INFO;connect;success;${username};`)
                     connectedUsernames.push(username)
 
                     const connectedPlayer = NovaEngine.world.createEntity()
-                    NovaEngine.world.addComponent(connectedPlayer, new PlayerConnection(ws, username))
-                    ws.send(JSON.stringify({
-                        type: 'spawn_player',
-                        username: username
+                    const id = Date.now().toString()
+                    NovaEngine.world.addComponent(connectedPlayer, new PlayerConnection(id, username, connection))
+                    connection.send(JSON.stringify({
+                        type: 'connect_ok',
+                        id: id,
+                        username: username,
+                        server_tick: NovaEngine.stepNumber
                     }))
                 }
             }
         } catch (e: any) {
-            console.log(`${new Date().toISOString()};ERROR;;;Could not interpret request.`)
-            ws.send(JSON.stringify({
+            console.log(`${new Date().toISOString()};ERROR;;;;Could not interpret request.`)
+            connection.send(JSON.stringify({
                 type: 'error',
                 message: `Could not interpret request.`,
                 request: message
@@ -56,14 +67,14 @@ wss.on('connection', (ws) => {
         }
     })
 
-    ws.on('close', () => { // This is currently close to System logic, however based on the WebSocket events. Should this be refactored or moved?
+    connection.on('close', () => { // This is currently close to System logic, however based on the WebSocket events. Should this be refactored or moved?
         // Player has disconnected, destroy their entity
         const entities = NovaEngine.world.queryEntities('PlayerConnection')
         for (const entity of entities) {
             const playerConnection = NovaEngine.world.getComponent<PlayerConnection>(entity, 'PlayerConnection')!
 
-            if (playerConnection.ws === ws) {
-                console.log(`${new Date().toISOString()};INFO;disconnect;success;${playerConnection.username}`)
+            if (playerConnection.socket === connection) {
+                console.log(`${new Date().toISOString()};INFO;disconnect;success;${playerConnection.username};`)
                 const index = connectedUsernames.indexOf(playerConnection.username)
                 if (index > -1) {
                     connectedUsernames.splice(index, 1)
@@ -76,32 +87,3 @@ wss.on('connection', (ws) => {
     })
 })
 
-const gameWidth = 960
-const gameHeight = 540
-
-spawnWalls(gameWidth, gameHeight)
-
-function spawnWalls(gameWidth = 0, gameHeight = 0) {
-    let wallThickness = 8 // Modify as needed
-
-
-    // Create top wall
-    let topWall = NovaEngine.world.createEntity()
-    NovaEngine.world.addComponent(topWall, new Transform(new Vector2(0, 0)))
-    NovaEngine.world.addComponent(topWall, new Collider(new Rectangle(gameWidth, wallThickness)))
-
-    // Create bottom wall
-    let bottomWall = NovaEngine.world.createEntity()
-    NovaEngine.world.addComponent(bottomWall, new Transform(new Vector2(0, gameHeight - wallThickness)))
-    NovaEngine.world.addComponent(bottomWall, new Collider(new Rectangle(gameWidth, wallThickness)))
-
-    // Create left wall
-    let leftWall = NovaEngine.world.createEntity()
-    NovaEngine.world.addComponent(leftWall, new Transform(new Vector2(0, wallThickness)))
-    NovaEngine.world.addComponent(leftWall, new Collider(new Rectangle(wallThickness, gameHeight - 2 * wallThickness)))
-
-    // Create right wall
-    let rightWall = NovaEngine.world.createEntity()
-    NovaEngine.world.addComponent(rightWall, new Transform(new Vector2(gameWidth - wallThickness, wallThickness)))
-    NovaEngine.world.addComponent(rightWall, new Collider(new Rectangle(wallThickness, gameHeight - 2 * wallThickness)))
-}

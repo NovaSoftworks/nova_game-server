@@ -4,12 +4,14 @@ import { WebSocket } from 'ws'
 export class PlayerConnection extends Component {
     public name: string = "PlayerConnection"
 
-    username: string = 'General K.'
-    ws: WebSocket
+    username: string
+    id: string
+    socket: WebSocket
 
-    constructor(ws: WebSocket, username: string) {
+    constructor(id: string, username: string, socket: WebSocket) {
         super()
-        this.ws = ws
+        this.id = id
         this.username = username
+        this.socket = socket
     }
 }

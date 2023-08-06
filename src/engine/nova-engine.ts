@@ -1,10 +1,11 @@
-import { Time } from "./core";
+import { TimeUtils } from "./utils";
 import { World } from "./ecs";
 
 export class NovaEngine {
     static world = World.current
 
     static start() {
+        console.log(`${new Date().toISOString()};INFO;;;;Starting game loop.`)
         setImmediate(NovaEngine.update) // Note: setImmediate triggers thousands of calls to update() per second. 
         // This is okay for prototyping, but will have to be refactored with something more accurate than setInterval.
     }
@@ -14,8 +15,8 @@ export class NovaEngine {
     static stepNumber: number = 0
 
     private static update() {
-        Time.calculateDeltaTime()
-        let dt = Time.deltaTime
+        TimeUtils.calculateDeltaTime()
+        let dt = TimeUtils.deltaTime
 
         NovaEngine.accumulatedTime += dt
 

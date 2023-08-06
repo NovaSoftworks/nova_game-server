@@ -1,5 +1,5 @@
-export class Time {
-    static previousFrameTime: number = Time.getCurrentTime()
+export class TimeUtils {
+    static previousFrameTime: number = TimeUtils.getCurrentTime()
 
 
     /**
@@ -16,13 +16,11 @@ export class Time {
     }
 
     /**
-     * Calculates the current deltaTime.
+     * Calculates the current deltaTimeUtils.
      */
     static calculateDeltaTime() {
-        const currentFrameTime = Time.getCurrentTime()
-        Time.deltaTime = currentFrameTime - Time.previousFrameTime
-        Time.previousFrameTime = currentFrameTime
+        const currentFrameTime = TimeUtils.getCurrentTime()
+        TimeUtils.deltaTime = currentFrameTime - TimeUtils.previousFrameTime
+        TimeUtils.previousFrameTime = currentFrameTime
     }
 }
-
-export default Time
