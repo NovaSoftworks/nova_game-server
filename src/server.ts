@@ -7,7 +7,7 @@ import { PlayerEntityDebugSystem } from "./systems"
 
 cliGreet()
 NovaEngine.start()
-//NovaEngine.world.createSystem(PlayerEntityDebugSystem)
+NovaEngine.world.createSystem(PlayerEntityDebugSystem)
 createMap()
 
 const port = 80
@@ -40,7 +40,7 @@ function handleNewConnection(connection: WebSocket) {
                     console.log(`${new Date().toISOString()};INFO;connect;success;${username};`)
 
                     const connectedPlayer = NovaEngine.world.createEntity()
-                    NovaEngine.world.addComponent(connectedPlayer, new PlayerConnection(username, connection, 'connected'))
+                    NovaEngine.world.addComponent(connectedPlayer, new PlayerConnection(Date.now().toString(), username, connection))
                     connection.send(JSON.stringify({
                         type: 'connect_ok',
                         id: connectedPlayer.id,
@@ -66,7 +66,6 @@ function handleNewConnection(connection: WebSocket) {
             const playerConnection = NovaEngine.world.getComponent(entity, PlayerConnection)!
 
             if (playerConnection.socket === connection) {
-                playerConnection.status = 'disconnected'
 
                 console.log(`${new Date().toISOString()};INFO;disconnect;success;${playerConnection.username};`)
 

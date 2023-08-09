@@ -15,7 +15,7 @@ export class PlayerEntityDebugSystem extends System {
             for (const entity of entities) {
                 const connectionComponent = this.world.getComponent(entity, PlayerConnection)!
 
-                console.log(`${new Date().toISOString()};INFO;;;;Player status: id=${entity.id}, username=${connectionComponent.username}`)
+                console.log(`${new Date().toISOString()};INFO;;;;Player status: id=${entity.id}, network_id=${connectionComponent.id}, username=${connectionComponent.username}`)
             }
 
             if (entities.length === 0) {
