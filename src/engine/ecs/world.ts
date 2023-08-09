@@ -2,12 +2,10 @@ import { Component, Entity, System } from "./"
 
 export class World {
     private entities: Map<number, Entity> = new Map<number, Entity>()
-    private components: Map<string, Component[]> = new Map<string, Component[]>()
+    private components: Map<Function, Component[]> = new Map<Function, Component[]>()
     private systems: System[] = []
 
     private nextEntityId: number = 0
-
-    static current: World = new World()
 
     // ENTITIES
     createEntity(): Entity {
@@ -16,12 +14,13 @@ export class World {
         return entity
     }
 
-    getEntity(entityId: number): Entity | undefined {
-        return this.entities.get(entityId)
-    }
-
     destroyEntity(entityId: number) {
         this.entities.delete(entityId)
+        this.destroyComponents(entityId)
+    }
+
+    getEntity(entityId: number): Entity | undefined {
+        return this.entities.get(entityId)
     }
 
     getAllEntities(): Entity[] {
@@ -31,37 +30,55 @@ export class World {
 
     // COMPONENTS
     addComponent(entity: Entity, component: Component) {
-        const componentName = component.name
+        const componentConstructor = component.constructor
 
-        if (!this.components.has(componentName)) {
-            this.components.set(componentName, [])
+        if (!this.components.has(componentConstructor)) {
+            this.components.set(componentConstructor, [])
         }
 
-        const componentArray = this.components.get(componentName)
-        if (componentArray)
-            componentArray[entity.id] = component
+        const componentArray = this.components.get(componentConstructor)!
+        componentArray[entity.id] = component
     }
 
-    removeComponent(entity: Entity, componentName: string) {
-        const componentArray = this.components.get(componentName)
-        if (componentArray)
-            delete componentArray[entity.id]
-    }
-
-    getComponent<T extends Component>(entity: Entity, componentName: string): T | undefined {
-        const componentArray = this.components.get(componentName)
+    destroyComponent(entity: Entity, componentConstructor: new (...args: any[]) => Component) {
+        const componentArray = this.components.get(componentConstructor)
         if (componentArray) {
-            return componentArray[entity.id] as T
+            delete componentArray[entity.id]
         }
+    }
 
-        return undefined
+    destroyComponents(entityId: number) {
+        for (const componentArray of this.components.values()) {
+            delete componentArray[entityId]
+        }
+    }
+
+    getComponent<T extends Component>(entity: Entity, componentConstructor: new (...args: any[]) => T): T | undefined {
+        const componentArray = this.components.get(componentConstructor)
+        return componentArray ? componentArray[entity.id] as T : undefined
     }
 
 
     // SYSTEMS
+    createSystem<T extends System>(systemType: new (world: World) => T): T {
+        const system = new systemType(this)
+        this.addSystem(system)
+        system.create()
+        return system
+    }
+
     addSystem(system: System) {
         if (!this.hasSystem(system))
             this.systems.push(system)
+    }
+
+    destroySystem<T extends System>(systemType: new (world: World) => T): void {
+        const systemIndex = this.systems.findIndex(system => system instanceof systemType)
+
+        if (systemIndex !== -1) {
+            this.systems[systemIndex].destroy()
+            this.systems.splice(systemIndex, 1)
+        }
     }
 
     hasSystem(system: System): boolean {
@@ -82,12 +99,12 @@ export class World {
 
 
     // QUERYING
-    queryEntities(...componentTypes: string[]): Entity[] {
-        const entities = World.current.getAllEntities()
+    queryEntities(...componentConstructors: (new (...args: any[]) => Component)[]): Entity[] {
+        const entities = this.getAllEntities();
 
         return entities.filter(entity => {
-            for (const componentType of componentTypes) {
-                if (!World.current.getComponent(entity, componentType)) {
+            for (const componentConstructor of componentConstructors) {
+                if (!this.getComponent(entity, componentConstructor)) {
                     return false
                 }
             }

@@ -2,7 +2,7 @@ import { TimeUtils } from "./utils";
 import { World } from "./ecs";
 
 export class NovaEngine {
-    static world = World.current
+    static world = new World()
 
     static start() {
         console.log(`${new Date().toISOString()};INFO;;;;Starting game loop.`)
@@ -11,7 +11,7 @@ export class NovaEngine {
     }
 
     private static accumulatedTime = 0
-    static fixedTimeStep: number = 16 // ms
+    static fixedTimeStep: number = 5 // ms
     static stepNumber: number = 0
 
     private static update() {

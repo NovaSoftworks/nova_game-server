@@ -3,9 +3,11 @@ import { PlayerConnection } from "./components"
 import { NovaEngine } from "./engine/nova-engine"
 import { WebSocket } from 'ws'
 import { createMap } from "./map"
+import { PlayerEntityDebugSystem } from "./systems"
 
 cliGreet()
 NovaEngine.start()
+//NovaEngine.world.createSystem(PlayerEntityDebugSystem)
 createMap()
 
 const port = 80
@@ -17,10 +19,11 @@ wss.on('listening', () => {
     console.log(`${new Date().toISOString()};INFO;;;;Listening on port ${port}.`)
 })
 
-const connectedUsernames: string[] = []
-const usernameTaken = (username: string) => { return connectedUsernames.includes(username) }
+wss.on('connection', (ws) => {
+    handleNewConnection(ws)
+})
 
-wss.on('connection', (connection) => {
+function handleNewConnection(connection: WebSocket) {
     connection.on('message', (message) => {
         try {
             const data = JSON.parse(message.toString())
@@ -33,25 +36,14 @@ wss.on('connection', (connection) => {
                         type: 'error',
                         message: `Cannot connect without a username.`
                     }))
-                    return
-                }
-
-                if (usernameTaken(username)) {
-                    console.log(`${new Date().toISOString()};INFO;connect;failure;${username};Already connected.`)
-                    connection.send(JSON.stringify({
-                        type: 'error',
-                        message: `${username} is already connected.`
-                    }))
                 } else {
                     console.log(`${new Date().toISOString()};INFO;connect;success;${username};`)
-                    connectedUsernames.push(username)
 
                     const connectedPlayer = NovaEngine.world.createEntity()
-                    const id = Date.now().toString()
-                    NovaEngine.world.addComponent(connectedPlayer, new PlayerConnection(id, username, connection))
+                    NovaEngine.world.addComponent(connectedPlayer, new PlayerConnection(username, connection, 'connected'))
                     connection.send(JSON.stringify({
                         type: 'connect_ok',
-                        id: id,
+                        id: connectedPlayer.id,
                         username: username,
                         server_tick: NovaEngine.stepNumber
                     }))
@@ -69,21 +61,18 @@ wss.on('connection', (connection) => {
 
     connection.on('close', () => { // This is currently close to System logic, however based on the WebSocket events. Should this be refactored or moved?
         // Player has disconnected, destroy their entity
-        const entities = NovaEngine.world.queryEntities('PlayerConnection')
+        const entities = NovaEngine.world.queryEntities(PlayerConnection)
         for (const entity of entities) {
-            const playerConnection = NovaEngine.world.getComponent<PlayerConnection>(entity, 'PlayerConnection')!
+            const playerConnection = NovaEngine.world.getComponent(entity, PlayerConnection)!
 
             if (playerConnection.socket === connection) {
-                console.log(`${new Date().toISOString()};INFO;disconnect;success;${playerConnection.username};`)
-                const index = connectedUsernames.indexOf(playerConnection.username)
-                if (index > -1) {
-                    connectedUsernames.splice(index, 1)
-                }
+                playerConnection.status = 'disconnected'
 
-                NovaEngine.world.destroyEntity(entity.id)
+                console.log(`${new Date().toISOString()};INFO;disconnect;success;${playerConnection.username};`)
+
+                // NovaEngine.world.destroyEntity(entity.id) // to move to a system
                 break
             }
         }
     })
-})
-
+}
