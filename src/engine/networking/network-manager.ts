@@ -6,10 +6,10 @@ import { NetworkMessage } from './network-message'
 /** Manages network connections and messaging for the game server.
  */
 export class NetworkManager {
-    private clients: Map<string, WebSocket>
+    private sockets: Map<string, WebSocket>
 
     constructor() {
-        this.clients = new Map<string, WebSocket>()
+        this.sockets = new Map<string, WebSocket>()
     }
 
     /** Starts the WebSocket server on the given port.
@@ -31,7 +31,7 @@ export class NetworkManager {
         wss.on('connection', (ws) => {
             const networkId = this.generateNetworkId()
 
-            this.clients.set(networkId, ws)
+            this.sockets.set(networkId, ws)
             this.handleClientConnected(networkId, ws)
 
             ws.on('message', (message) => {
@@ -40,7 +40,7 @@ export class NetworkManager {
 
             ws.on('close', () => {
                 this.handleClientDisconnected(networkId)
-                this.clients.delete(networkId)
+                this.sockets.delete(networkId)
             })
 
             ws.on('message', (message) => {
@@ -59,10 +59,10 @@ export class NetworkManager {
      * @param {NetworkMessage} message - The message to send.
      */
     sendMessage(networkId: string, message: NetworkMessage) {
-        const client = this.clients.get(networkId)
+        const socket = this.sockets.get(networkId)
 
-        if (client && client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(message))
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(message))
         }
     }
 
@@ -71,9 +71,9 @@ export class NetworkManager {
      * @param {NetworkMessage} message - The message to broadcast.
      */
     broadcastMessage(message: NetworkMessage) {
-        for (const client of this.clients.values()) {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify(message))
+        for (const socket of this.sockets.values()) {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(message))
             }
         }
     }
