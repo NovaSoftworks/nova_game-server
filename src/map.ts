@@ -1,6 +1,7 @@
 import { NovaEngine } from "./engine/nova-engine"
 import { Rectangle, Vector2 } from "./engine/math"
 import { Collider, Transform } from "./components"
+import { LogUtils } from "./engine/utils/"
 
 
 
@@ -8,7 +9,7 @@ export function createMap() {
     let wallThickness = 8 // Modify as needed
     const gameWidth = 960
     const gameHeight = 540
-    console.log(`${new Date().toISOString()};INFO;;;;Map instantiated (${gameWidth}x${gameHeight}).`)
+    LogUtils.info('Map', `Map instantiated (${gameWidth}x${gameHeight})`)
 
     // Create top wall
     let topWall = NovaEngine.world.createEntity()

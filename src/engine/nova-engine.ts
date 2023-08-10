@@ -1,11 +1,11 @@
-import { TimeUtils } from "./utils";
-import { World } from "./ecs";
+import { LogUtils, TimeUtils } from "./utils"
+import { World } from "./ecs"
 
 export class NovaEngine {
     static world = new World()
 
     static start() {
-        console.log(`${new Date().toISOString()};INFO;;;;Starting game loop.`)
+        LogUtils.info('Engine', 'Starting game loop')
         setImmediate(NovaEngine.update) // Note: setImmediate triggers thousands of calls to update() per second. 
         // This is okay for prototyping, but will have to be refactored with something more accurate than setInterval.
     }
