@@ -107,7 +107,17 @@ export class NetworkManager {
     }
 
     private handleMessageReceived(networkId: string, message: RawData) {
-        LogUtils.info('NetworkManager', `Incoming message from client ${networkId}`)
-        LogUtils.debug('NetworkManager', `Incoming message from client ${networkId}: ${message.toString()}`)
+        const parsedMessage: NetworkMessage = JSON.parse(message.toString())
+        switch (parsedMessage.type) {
+            case 'ping':
+                this.sendMessage(networkId, {
+                    type: 'pong',
+                    payload: parsedMessage.payload
+                })
+                break;
+            default:
+                LogUtils.warn('NetworkManager', `Unhandled message type received from client ${networkId}: ${parsedMessage.type}`)
+                break;
+        }
     }
 }
