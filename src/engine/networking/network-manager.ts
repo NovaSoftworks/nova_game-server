@@ -43,10 +43,6 @@ export class NetworkManager {
                 this.sockets.delete(networkId)
             })
 
-            ws.on('message', (message) => {
-                this.handleMessageReceived(networkId, message)
-            })
-
             ws.on('error', (err) => {
                 LogUtils.error('NetworkManager', `Client ${networkId} raised: ${err.message}`)
             })
@@ -84,10 +80,18 @@ export class NetworkManager {
 
     private handleClientConnected(networkId: string, ws: WebSocket) {
         LogUtils.info('NetworkManager', `Client connected: ${networkId}`)
+        this.sendMessage(networkId, {
+            type: 'connection_ok',
+            payload: {
+                network_id: networkId,
+                clients: [...this.sockets.keys()]
+            }
+        })
+
         this.broadcastMessage({
             type: "client_connected",
             payload: {
-                networkId: networkId
+                network_id: networkId
             }
         })
     }
@@ -97,7 +101,7 @@ export class NetworkManager {
         this.broadcastMessage({
             type: "client_disconnected",
             payload: {
-                networkId: networkId
+                network_id: networkId
             }
         })
     }
