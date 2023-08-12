@@ -1,9 +1,11 @@
 import { NetworkManager } from "../networking"
+import { LogUtils } from "../utils"
 import { Component, Entity, System } from "./"
 
 export class World {
     private entities: Map<number, Entity> = new Map<number, Entity>()
     private components: Map<Function, Component[]> = new Map<Function, Component[]>()
+    private singletons: Map<Function, Component> = new Map<Function, Component>()
     private systems: System[] = []
 
     private nextEntityId: number = 0
@@ -59,6 +61,25 @@ export class World {
     getComponent<T extends Component>(entity: Entity, componentConstructor: new (...args: any[]) => T): T | undefined {
         const componentArray = this.components.get(componentConstructor)
         return componentArray ? componentArray[entity.id] as T : undefined
+    }
+
+    // SINGLETONS
+    addSingleton(component: Component) {
+        const componentConstructor = component.constructor
+
+        if (!this.singletons.has(componentConstructor)) {
+            this.singletons.set(componentConstructor, component)
+        } else {
+            LogUtils.error('World', `Attempting to add a second ${componentConstructor.name} to the same world instance`)
+        }
+    }
+
+    getSingleton<T extends Component>(componentConstructor: new (...args: any[]) => T): T | undefined {
+        return this.singletons.get(componentConstructor) as T
+    }
+
+    destroySingleton(componentConstructor: new (...args: any[]) => Component) {
+        this.singletons.delete(componentConstructor)
     }
 
 

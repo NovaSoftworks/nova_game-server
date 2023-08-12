@@ -1,4 +1,5 @@
 import { Component, Entity, System, World } from '../'
+import { LogUtils } from '../../utils'
 
 describe('World Entity Management', () => {
     let world: World
@@ -90,6 +91,60 @@ describe('World Component Management', () => {
 
         const retrievedComponent = world.getComponent(entity, MockComponent)
         expect(retrievedComponent).toBeUndefined()
+    })
+})
+
+describe('World Singleton Management', () => {
+    let world: World
+    class MockSingletonComponent extends Component { }
+
+    beforeEach(() => {
+        world = new World()
+    })
+
+    it('should add a singleton and retrieve it', () => {
+        const singleton = new MockSingletonComponent()
+        world.addSingleton(singleton)
+
+        const retrievedSingleton = world.getSingleton(MockSingletonComponent)
+        expect(retrievedSingleton).toBeDefined()
+        expect(retrievedSingleton).toBe(singleton)
+    })
+
+    it('should not allow the addition of a second instance of a singleton', () => {
+        const singleton1 = new MockSingletonComponent()
+        const singleton2 = new MockSingletonComponent()
+        world.addSingleton(singleton1)
+
+        // Spy on the logger to see if an error was logged
+        const spy = jest.spyOn(LogUtils, 'error').mockImplementation(() => { })
+
+        world.addSingleton(singleton2)
+        expect(spy).toHaveBeenCalledWith('World', expect.stringContaining('Attempting to add a second MockSingletonComponent'))
+
+        // Restore the logger
+        spy.mockRestore()
+    })
+
+    it('should retrieve only the first instance of a singleton even if attempts were made to add more', () => {
+        const singleton1 = new MockSingletonComponent()
+        const singleton2 = new MockSingletonComponent()
+        world.addSingleton(singleton1)
+        world.addSingleton(singleton2)  // this should fail silently and log an error
+
+        const retrievedSingleton = world.getSingleton(MockSingletonComponent)
+        expect(retrievedSingleton).toBe(singleton1)
+        expect(retrievedSingleton).not.toBe(singleton2)
+    })
+
+    it('should destroy a singleton and not be able to retrieve it afterward', () => {
+        const singleton = new MockSingletonComponent()
+        world.addSingleton(singleton)
+        expect(world.getSingleton(MockSingletonComponent)).toBeDefined()
+
+        world.destroySingleton(MockSingletonComponent)
+
+        expect(world.getSingleton(MockSingletonComponent)).toBeUndefined()
     })
 })
 
