@@ -1,15 +1,15 @@
 import { v4 as uuidv4 } from 'uuid'
 import { RawData, WebSocket } from 'ws'
 import { LogUtils } from '../utils'
-import { NetworkMessage } from './network-message'
+import { Client, NetworkMessage } from '.'
 
 /** Manages network connections and messaging for the game server.
  */
 export class NetworkManager {
-    private sockets: Map<string, WebSocket>
+    private clients: Map<string, Client>
 
     constructor() {
-        this.sockets = new Map<string, WebSocket>()
+        this.clients = new Map<string, Client>()
     }
 
     /** Starts the WebSocket server on the given port.
@@ -31,7 +31,7 @@ export class NetworkManager {
         wss.on('connection', (ws) => {
             const networkId = this.generateNetworkId()
 
-            this.sockets.set(networkId, ws)
+            this.clients.set(networkId, new Client(ws, networkId))
             this.handleClientConnected(networkId, ws)
 
             ws.on('message', (message) => {
@@ -40,7 +40,7 @@ export class NetworkManager {
 
             ws.on('close', () => {
                 this.handleClientDisconnected(networkId)
-                this.sockets.delete(networkId)
+                this.clients.delete(networkId)
             })
 
             ws.on('error', (err) => {
@@ -49,28 +49,13 @@ export class NetworkManager {
         })
     }
 
-    /** Sends a message to a specific client by network ID.
-     *
-     * @param {string} networkId - The unique ID of the client.
-     * @param {NetworkMessage} message - The message to send.
-     */
-    sendMessage(networkId: string, message: NetworkMessage) {
-        const socket = this.sockets.get(networkId)
-
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify(message))
-        }
-    }
-
     /** Broadcasts a message to all connected clients.
      *
      * @param {NetworkMessage} message - The message to broadcast.
      */
     broadcastMessage(message: NetworkMessage) {
-        for (const socket of this.sockets.values()) {
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify(message))
-            }
+        for (const client of this.clients.values()) {
+            client.sendMessage(message)
         }
     }
 
@@ -78,22 +63,29 @@ export class NetworkManager {
         return uuidv4()
     }
 
+    private clientExists(networkId: string): boolean {
+        return this.clients.has(networkId)
+    }
+
     private handleClientConnected(networkId: string, ws: WebSocket) {
         LogUtils.info('NetworkManager', `Client connected: ${networkId}`)
-        this.sendMessage(networkId, {
-            type: 'connection_ok',
-            payload: {
-                network_id: networkId,
-                clients: [...this.sockets.keys()]
-            }
-        })
+        if (this.clientExists(networkId)) {
+            const client = this.clients.get(networkId)!
+            client.sendMessage({
+                type: 'connection_ok',
+                payload: {
+                    network_id: networkId,
+                    clients: [...this.clients.keys()]
+                }
+            })
 
-        this.broadcastMessage({
-            type: "client_connected",
-            payload: {
-                network_id: networkId
-            }
-        })
+            this.broadcastMessage({
+                type: "client_connected",
+                payload: {
+                    network_id: networkId
+                }
+            })
+        }
     }
 
     private handleClientDisconnected(networkId: string) {
@@ -107,17 +99,26 @@ export class NetworkManager {
     }
 
     private handleMessageReceived(networkId: string, message: RawData) {
-        const parsedMessage: NetworkMessage = JSON.parse(message.toString())
-        switch (parsedMessage.type) {
-            case 'ping':
-                this.sendMessage(networkId, {
-                    type: 'pong',
-                    payload: parsedMessage.payload
-                })
-                break;
-            default:
-                LogUtils.warn('NetworkManager', `Unhandled message type received from client ${networkId}: ${parsedMessage.type}`)
-                break;
+        if (this.clientExists(networkId)) {
+            const parsedMessage: NetworkMessage = JSON.parse(message.toString())
+            const client = this.clients.get(networkId)!
+
+            switch (parsedMessage.type) {
+                case 'ping':
+                    client.sendMessage({
+                        type: 'pong',
+                        payload: parsedMessage.payload
+                    })
+                    LogUtils.debug('NetworkManager', `ping received from client ${networkId}`)
+                    break
+                case 'pong':
+                    client.rtt = Date.now() - parsedMessage.payload['timestamp']
+                    LogUtils.debug('NetworkManager', `pong received from client ${networkId}`)
+                    break
+                default:
+                    LogUtils.warn('NetworkManager', `Unhandled message type received from client ${networkId}: ${parsedMessage.type}`)
+                    break
+            }
         }
     }
 }
