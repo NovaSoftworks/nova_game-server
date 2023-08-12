@@ -67,6 +67,15 @@ export class NetworkManager {
         return this.clients.has(networkId)
     }
 
+    private clientUsernameExists(username: string): boolean {
+        const clients = [...this.clients.values()]
+        for (const client of clients) {
+            if (client.username == username)
+                return true
+        }
+        return false
+    }
+
     private handleClientConnected(networkId: string, ws: WebSocket) {
         LogUtils.info('NetworkManager', `Client connected: ${networkId}`)
         if (this.clientExists(networkId)) {
@@ -96,6 +105,7 @@ export class NetworkManager {
                 network_id: networkId
             }
         })
+        this.clients.delete(networkId)
     }
 
     private handleMessageReceived(networkId: string, message: RawData) {
@@ -109,11 +119,28 @@ export class NetworkManager {
                         type: 'pong',
                         payload: parsedMessage.payload
                     })
-                    LogUtils.debug('NetworkManager', `ping received from client ${networkId}`)
+                    LogUtils.debug('NetworkManager', `Ping received from client ${networkId}`)
                     break
                 case 'pong':
                     client.rtt = Date.now() - parsedMessage.payload['timestamp']
-                    LogUtils.debug('NetworkManager', `pong received from client ${networkId}`)
+                    LogUtils.debug('NetworkManager', `Pong received from client ${networkId}`)
+                    break
+                case 'authenticate':
+                    const username = parsedMessage.payload['username']
+                    if (this.clientUsernameExists(username)) {
+                        client.sendMessage({
+                            type: 'authentication_ko',
+                            error: `Username "${username}" already exists`
+                        })
+                        client.socket.close()
+                        LogUtils.info('NetworkManager', `Failed to authenticate client ${networkId} as ${username}`)
+                    } else {
+                        client.username = username
+                        client.sendMessage({
+                            type: 'authentication_ok'
+                        })
+                        LogUtils.info('NetworkManager', `Authenticated client ${networkId} as ${username}`)
+                    }
                     break
                 default:
                     LogUtils.warn('NetworkManager', `Unhandled message type received from client ${networkId}: ${parsedMessage.type}`)
