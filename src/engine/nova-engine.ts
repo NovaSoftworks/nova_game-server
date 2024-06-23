@@ -11,7 +11,7 @@ export class NovaEngine {
     }
 
     private static accumulatedTime = 0
-    static fixedTimeStep: number = 5 // ms
+    static fixedTimeStep: number = 10 // ms
     static stepNumber: number = 0
 
     private static update() {
