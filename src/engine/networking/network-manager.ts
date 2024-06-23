@@ -30,9 +30,10 @@ export class NetworkManager {
 
         wss.on('connection', (ws) => {
             const networkId = this.generateNetworkId()
+            const client = new Client(ws, networkId)
 
-            this.clients.set(networkId, new Client(ws, networkId))
-            this.handleClientConnected(networkId, ws)
+            this.clients.set(networkId, client)
+            this.handleClientConnected(client)
 
             ws.on('message', (message) => {
                 this.handleMessageReceived(networkId, message)
@@ -76,7 +77,9 @@ export class NetworkManager {
         return false
     }
 
-    private handleClientConnected(networkId: string, ws: WebSocket) {
+    private handleClientConnected(client: Client) {
+        const networkId = client.networkId
+
         LogUtils.info('NetworkManager', `Client connected: ${networkId}`)
         if (this.clientExists(networkId)) {
             const client = this.clients.get(networkId)!
