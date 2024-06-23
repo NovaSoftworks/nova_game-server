@@ -1,12 +1,11 @@
-import { Tick } from "../components/tick"
+import { Tick } from "../components"
 import { System } from "../engine/ecs"
 
 export class TickSystem extends System {
 
     create() {
         if (!this.world.getSingleton(Tick)) {
-            const tick = new Tick()
-            this.world.addSingleton(tick)
+            this.world.addSingleton(new Tick())
         }
     }
 
