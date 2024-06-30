@@ -1,4 +1,3 @@
-import { NetworkManager } from "../networking"
 import { LogUtils } from "../utils"
 import { Component, Entity, System } from "./"
 
@@ -9,8 +8,6 @@ export class World {
     private systems: System[] = []
 
     private nextEntityId: number = 0
-
-    networkManager: NetworkManager = new NetworkManager()
 
     // ENTITIES
     createEntity(): Entity {
