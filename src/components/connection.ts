@@ -7,6 +7,8 @@ export class Connection extends Component {
     status: ConnectionStatus = ConnectionStatus.Disconnected
     socket: WebSocket
 
+    username?: string
+
     messagesBuffer: Map<string, NetworkMessage[]> = new Map<string, NetworkMessage[]>()
 
     constructor(socket: WebSocket) {
