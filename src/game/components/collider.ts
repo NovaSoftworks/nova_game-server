@@ -1,5 +1,5 @@
-import { Component } from '../engine/ecs'
-import { Rectangle } from '../engine/math'
+import { Component } from '../../engine/ecs'
+import { Rectangle } from '../../engine/math'
 
 export class Collider extends Component {
     public shape: Rectangle

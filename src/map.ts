@@ -1,6 +1,6 @@
 import { NovaEngine } from "./engine/nova-engine"
 import { Rectangle, Vector2 } from "./engine/math"
-import { Collider, Transform } from "./components"
+import { Collider, Transform } from "./game/components"
 import { LogUtils } from "./engine/utils/"
 
 

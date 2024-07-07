@@ -1,5 +1,5 @@
-import { Vector2 } from "../engine/math"
-import { Component } from "../engine/ecs"
+import { Vector2 } from "../../engine/math"
+import { Component } from "../../engine/ecs"
 
 export class Velocity extends Component {
     velocity: Vector2

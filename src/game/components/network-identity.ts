@@ -1,4 +1,4 @@
-import { Component } from "../engine/ecs"
+import { Component } from "../../engine/ecs"
 
 export class NetworkIdentity extends Component {
     networkId: string

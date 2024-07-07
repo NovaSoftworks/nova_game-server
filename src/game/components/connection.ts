@@ -1,5 +1,5 @@
-import { Component } from "../engine/ecs"
-import { NetworkMessage } from "../engine/utils"
+import { Component } from "../../engine/ecs"
+import { NetworkMessage } from "../../engine/utils"
 
 import { WebSocket } from 'ws'
 

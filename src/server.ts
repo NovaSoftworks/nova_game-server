@@ -2,7 +2,7 @@ import { greet as cliGreet } from "./cli"
 import { NovaEngine } from "./engine/nova-engine"
 import { createMap } from "./map"
 import { LogLevel, LogUtils } from "./engine/utils"
-import { ConnectionCleanupSystem, ConnectionSystem, TickSystem } from "./systems"
+import { ConnectionCleanupSystem, ConnectionSystem, TickSystem } from "./game/systems"
 
 // CONFIGURATION
 LogUtils.level = LogLevel.DEBUG

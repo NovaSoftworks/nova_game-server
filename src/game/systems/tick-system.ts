@@ -1,5 +1,5 @@
 import { Tick } from "../components"
-import { System } from "../engine/ecs"
+import { System } from "../../engine/ecs"
 
 export class TickSystem extends System {
 

@@ -1,5 +1,5 @@
 import { Connection, ConnectionStatus } from "../components"
-import { System } from "../engine/ecs"
+import { System } from "../../engine/ecs"
 
 export class ConnectionCleanupSystem extends System {
 

@@ -1,7 +1,7 @@
 import { parse } from "uuid"
 import { Connection, ConnectionStatus, NetworkIdentity } from "../components"
-import { Entity, System } from "../engine/ecs"
-import { ConnectionUtils, LogUtils, NetworkMessage } from "../engine/utils"
+import { Entity, System } from "../../engine/ecs"
+import { ConnectionUtils, LogUtils, NetworkMessage } from "../../engine/utils"
 
 import { WebSocket, RawData } from 'ws'
 
@@ -22,7 +22,7 @@ export class ConnectionSystem extends System {
         })
 
         wss.on('connection', (ws) => {
-            LogUtils.info('NetworkManager', `Client connected.`)
+            LogUtils.info('NetworkManager', `Client connected`)
             const entity = this.world.createEntity()
             const connection = new Connection(ws)
             connection.status = ConnectionStatus.Connected
@@ -35,7 +35,7 @@ export class ConnectionSystem extends System {
 
             ws.on('close', () => {
                 connection.status = ConnectionStatus.Disconnected
-                LogUtils.info('NetworkManager', `Client disconnected.`)
+                LogUtils.info('NetworkManager', `Client disconnected`)
             })
         })
     }
@@ -51,14 +51,14 @@ export class ConnectionSystem extends System {
     }
 
     authenticate(connection: Connection, connectedEntities: Entity[]) {
-        const authenticationMessages = connection.getMessages('authentication')
+        const authenticationMessages = connection.getMessages('authentication_request')
         if (authenticationMessages.length < 1) return
         const username = authenticationMessages[0].payload.username
         LogUtils.info('NetworkSystem', `Authentication request received for '${username}'`)
 
         if (username.length == 0) {
             ConnectionUtils.sendMessage(connection.socket, {
-                type: 'authentication_error',
+                type: 'authentication_failure',
                 payload: {
                     message: `Username can not be empty.`
                 }
@@ -68,7 +68,7 @@ export class ConnectionSystem extends System {
 
         if (username.length < 3 || username.length > 16) {
             ConnectionUtils.sendMessage(connection.socket, {
-                type: 'authentication_error',
+                type: 'authentication_failure',
                 payload: {
                     message: `Username must be between 3 and 16 characters.`
                 }
@@ -80,7 +80,7 @@ export class ConnectionSystem extends System {
             const c = this.world.getComponent(e, Connection)!
             if (c.username == username) {
                 ConnectionUtils.sendMessage(connection.socket, {
-                    type: 'authentication_error',
+                    type: 'authentication_failure',
                     payload: {
                         message: `Username '${username}' is already used.`
                     }
@@ -91,7 +91,7 @@ export class ConnectionSystem extends System {
 
         connection.username = username
         ConnectionUtils.sendMessage(connection.socket, {
-            type: 'authentication_ok',
+            type: 'authentication_success',
             payload: {
                 username: username
             }
