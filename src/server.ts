@@ -4,7 +4,7 @@ import { createMap } from "./map"
 import { LogLevel, LogUtils } from "./engine/utils"
 import { ConnectionCleanupSystem, ConnectionSystem, TickSystem } from "./game/systems"
 import { NovaEventBus } from "./engine/events"
-import { NetworkManager } from "./engine/networking"
+import { NetworkManager, AuthenticationManager } from "./engine/networking"
 
 // CONFIGURATION
 LogUtils.level = LogLevel.DEBUG
@@ -13,6 +13,7 @@ LogUtils.level = LogLevel.DEBUG
 cliGreet()
 const eventBus = new NovaEventBus()
 const networkManager = new NetworkManager(eventBus)
+const authenticationManager = new AuthenticationManager(networkManager)
 
 networkManager.startServer(8080)
 
