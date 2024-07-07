@@ -1,20 +1,20 @@
-import { v4 as uuidv4 } from 'uuid'
 import { WebSocket } from 'ws'
+import { NetworkManager, NetworkMessage } from '../networking'
+import { LogUtils } from './log-utils'
 
 export class ConnectionUtils {
-    static sendMessage(socket: WebSocket, message: NetworkMessage) {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify(message))
+    private static networkManager: NetworkManager
+
+    static initialize(networkManager: NetworkManager) {
+        ConnectionUtils.networkManager = networkManager
+    }
+
+    static sendMessage(connectionHandle: string, message: NetworkMessage) {
+        if (this.networkManager) {
+            this.networkManager.sendMessage(connectionHandle, message)
+        } else {
+            LogUtils.error('ConnectionUtils', 'You must initialize ConnectionUtils with a NetworkManager to send messages.')
         }
     }
-
-    static generateNetworkId(): string {
-        return uuidv4()
-    }
 }
 
-export interface NetworkMessage {
-    type: string,
-    payload?: any
-    error?: string
-}
